@@ -1,6 +1,7 @@
-//Classe responsavel por instanciar os motores
+// Classe responsável por instanciar os motores
 class MotorDC {
-  int spd = 200, pin1, pin2;
+  int speed = 200;
+  int pin1, pin2;
 
 public:
   void Pinout(int in1, int in2) {
@@ -10,57 +11,43 @@ public:
     pinMode(pin2, OUTPUT);
   }
 
-  void Speed(int in1) {
-    spd = in1;
+  void Speed(int spd) {
+    speed = spd;
   }
 
   void Frente() {
-    digitalWrite(pin1, spd);
-    digitalWrite(pin2, 0);
+    digitalWrite(pin1, LOW);
+    analogWrite(pin2, speed);
   }
 
-  void ParaTras() {  // Backward é o método para fazer o motor girar para trás
-    digitalWrite(pin1, 0);
-    digitalWrite(pin2, spd);
+  void ParaTras() {
+    analogWrite(pin1, speed);
+    digitalWrite(pin2, LOW);
   }
-  void Parar() {  // Stop é o metodo para fazer o motor ficar parado.
-    digitalWrite(pin1, 0);
-    digitalWrite(pin2, 0);
+
+  void Parar() {
+    digitalWrite(pin1, LOW);
+    digitalWrite(pin2, LOW);
   }
 };
 
-//Bibliotecas
+// Pinos do Ultrassônico
+int triggerPin = 3;
+int echoPin = 2;
 
-#include <SoftwareSerial.h>
-#include <TinyGPS.h>
-
-//Pinos do GPS
-SoftwareSerial mySerial(10, 11);
-TinyGPS gps;
-
-//Variaveis de longitude e latitude do GPS
-float flat, flon;
-unsigned long age;
-
-//Pinos do Ultrassonico
-int triggerPin = 3, echoPin = 2;
-
-//
 MotorDC Motor1, Motor2, Motor3, Motor4;
 
-
-
 void setup() {
-  //Configuração de comunicação serial
+  // Configuração de comunicação serial
   Serial.begin(9600);
   mySerial.begin(9600);
   delay(1000);
 
-  // Set pinos ultrassonico
+  // Configuração dos pinos do ultrassônico
   pinMode(triggerPin, OUTPUT);
   pinMode(echoPin, INPUT);
 
-
+  // Setando os pinos de cada motor
   Motor1.Pinout(22, 24);
   Motor2.Pinout(26, 28);
   Motor3.Pinout(30, 32);
@@ -71,7 +58,7 @@ void loop() {
   ControleAlt();
 }
 
-// Ler os dados do sensor de distancia ultrassonico
+// Ler os dados do sensor de distância ultrassônico
 long readUltrasonicDistance() {
   // Medindo a distância do obstáculo
   digitalWrite(triggerPin, LOW);
@@ -85,37 +72,35 @@ long readUltrasonicDistance() {
   return distance;
 }
 
-
-//Controle alternativo do veiculo
+// Controle alternativo do veículo
 void ControleAlt() {
-  Serial.println("Iniciando controle alternativo");
+  Serial.println("Iniciando controle");
 
-  if (40 > readUltrasonicDistance()) {
-    Serial.println("desviando");
-    parar();
-    delay(2000);
+  if (readUltrasonicDistance() < 40) {
+    Serial.println("Desviando");
+    Parar();
+    delay(1000);
 
-    girarDireita();
+    GirarDireita();
     delay(2000);
-    andarParaFrente();
+    AndarParaFrente();
     delay(2000);
-    girarEsquerda();
+    GirarEsquerda();
     delay(2000);
-    andarParaFrente();
+    AndarParaFrente();
     delay(2000);
-    girarDireita();
+    GirarDireita();
     delay(2000);
 
     ControleAlt();
   } else {
-    Serial.println("andando para frente");
-    andarParaTras();
+    Serial.println("Andando para frente");
+    AndarParaFrente();
   }
 }
 
-
 // Método para andar para frente
-void andarParaFrente() {
+void AndarParaFrente() {
   Motor1.Frente();
   Motor2.Frente();
   Motor3.Frente();
@@ -123,7 +108,7 @@ void andarParaFrente() {
 }
 
 // Método para girar para a esquerda
-void girarEsquerda() {
+void GirarEsquerda() {
   Motor1.Frente();
   Motor2.Frente();
   Motor3.ParaTras();
@@ -131,7 +116,7 @@ void girarEsquerda() {
 }
 
 // Método para girar para a direita
-void girarDireita() {
+void GirarDireita() {
   Motor1.ParaTras();
   Motor2.ParaTras();
   Motor3.Frente();
@@ -139,17 +124,9 @@ void girarDireita() {
 }
 
 // Método para parar
-void parar() {
+void Parar() {
   Motor1.Parar();
   Motor2.Parar();
   Motor3.Parar();
   Motor4.Parar();
-}
-
-// Método para andar para trás
-void andarParaTras() {
-  Motor1.ParaTras();
-  Motor2.ParaTras();
-  Motor3.ParaTras();
-  Motor4.ParaTras();
 }
